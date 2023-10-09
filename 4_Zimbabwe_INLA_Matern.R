@@ -3,6 +3,8 @@ library(geojsonio)
 library(sp)
 library(INLA)
 
+# Matern example: https://www.paulamoraga.com/book-geospatial/sec-geostatisticaldataexamplespatial.html?q=matern#building-the-spde-model-on-the-mesh-1
+
 #---------------------------------------------------------------------
 # load data
 #---------------------------------------------------------------------
@@ -25,16 +27,20 @@ y_coords = spdf$center_y
 x_coords = (x_coords - min(x_coords))/(max(x_coords) - min(x_coords))
 y_coords = (y_coords - min(y_coords))/(max(y_coords) - min(y_coords))
 
-plot(x_coords, y_coords, col="red", pch=16, main="Centroids")
+plot(x_coords, y_coords, col="red", pch=16, main="Centroids - normalised")
 
 y = round(spdf$y)
 n_obs = round(spdf$n_obs)
 estimate = spdf$estimate
 
-plot(x = c(0,0.3), y = c(0.,0.3), type="l")
-points(estimate, y/n_obs, pch=16, col="blue")
+# plot(x = c(0,0.3), y = c(0.,0.3), type="l")
+# points(estimate, y/n_obs, pch=16, col="blue")
 
-df_model <- data.frame(area_id=spdf$area_id, x_coords, y_coords, y, n_obs, estimate)
+ids <- str_sub(spdf$area_id, start = -2)
+ids <- str_replace(ids, "_", "")
+ids <- as.numeric(ids)
+
+df_model <- data.frame(ids=ids, x_coords, y_coords, y, n_obs, estimate)
 head(df_model)
 
 #---------------------------------------------------------------------
@@ -71,7 +77,8 @@ dim(Ap)
 stk.e <- inla.stack(
   tag = "est",
   data = list(y = df_model$y, numtrials = df_model$n_obs),
-  A = list(1, A),
+  #A = list(1, A),
+  A = A,
   effects = list(data.frame(b0 = 1), s = indexs)
 )
 
@@ -79,13 +86,10 @@ stk.e <- inla.stack(
 stk.p <- inla.stack(
   tag = "pred",
   data = list(y = NA, n_obs = NA),
-  A = list(1, Ap),
+  #A = list(1, Ap),
+  A = A,
   effects = list(data.frame(b0 = 1), s = indexs)
 )
-# Error in (function (data, A, effects, tag = "", compress = TRUE, remove.unused = TRUE)  : 
-#             Row count mismatch for A: 1,63
-
-
 
 # stk.full has stk.e and stk.p
 stk.full <- inla.stack(stk.e, stk.p)
@@ -102,6 +106,28 @@ res <- inla(formula,
               A = inla.stack.A(stk.full)
             )
 )
+
+summary(res)
+
+# Results summary
+# res$summary.fixed
+# res$summary.random
+# res$summary.hyperpar
+# res$marginals.fixed
+
+fitted <- res$summary.fitted.values
+dim(fitted)
+fitted_0.5quant <- fitted$`0.5quant`
+
+#plot(x = c(0,0.3), y = c(0.,0.3), type="l", xlab="raw estimate (y/n_obs)", ylab="INLA estimate, iid")
+plot()
+plot (estimate, fitted_0.5quant, pch=16, col="red")
+legend(0.01, 0.27, 
+       legend=c("INLA estimates, Besag"),
+       col=c( "red"), 
+       pch= c(16, 16),
+       cex=0.8,
+       title="", text.font=4, bg='lightblue')
 
 
 
