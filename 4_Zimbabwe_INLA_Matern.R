@@ -57,8 +57,12 @@ plot(mesh)
 points(coo, col = "red")
 
 # alpha = nu + d/2
-# nu = alpha - d/2 = alpha - 1
 # nu = 5/2 = alpha -1, hence alpha = 5/2+1 ?
+#
+# nu = alpha - d/2
+# d = 2
+# nu = alpha - 1
+# alpha = nu + 1 = 3/2 +1 = 5/2
 spde <- inla.spde2.matern(mesh = mesh, alpha = 2, constr = TRUE)
 
 indexs <- inla.spde.make.index("s", spde$n.spde)
