@@ -27,7 +27,7 @@ y_coords = spdf$center_y
 x_coords = (x_coords - min(x_coords))/(max(x_coords) - min(x_coords))
 y_coords = (y_coords - min(y_coords))/(max(y_coords) - min(y_coords))
 
-plot(x_coords, y_coords, col="red", pch=16, main="Centroids - normalised")
+#plot(x_coords, y_coords, col="red", pch=16, main="Centroids - normalised")
 
 y = round(spdf$y)
 n_obs = round(spdf$n_obs)
@@ -48,10 +48,7 @@ head(df_model)
 #---------------------------------------------------------------------
 
 coo <- cbind(x_coords, y_coords)
-mesh <- inla.mesh.2d(
-  loc = coo, max.edge = c(0.1, 5),
-  cutoff = 0.01
-)
+mesh <- inla.mesh.2d(loc = coo, max.edge = c(0.1, 5),cutoff = 0.01)
 mesh$n
 plot(mesh)
 points(coo, col = "red")
@@ -81,18 +78,16 @@ dim(Ap)
 stk.e <- inla.stack(
   tag = "est",
   data = list(y = df_model$y, numtrials = df_model$n_obs),
-  #A = list(1, A),
-  A = A,
-  effects = list(data.frame(b0 = 1), s = indexs)
+  A = list(1, A),
+  effects = list(data.frame(b0 = rep(1, nrow(coo))), s = indexs)
 )
 
 # stack for prediction stk.p
 stk.p <- inla.stack(
   tag = "pred",
   data = list(y = NA, n_obs = NA),
-  #A = list(1, Ap),
-  A = A,
-  effects = list(data.frame(b0 = 1), s = indexs)
+  A = list(1, Ap),
+  effects = list(data.frame(b0 = rep(1, nrow(coop))), s = indexs)
 )
 
 # stk.full has stk.e and stk.p
@@ -105,35 +100,18 @@ res <- inla(formula,
             Ntrials = numtrials,
             control.family = list(link = "logit"),
             data = inla.stack.data(stk.full),
-            control.predictor = list(
-              compute = TRUE, link = 1,
-              A = inla.stack.A(stk.full)
-            )
+            control.predictor = list(compute = TRUE, link = 1, A = inla.stack.A(stk.full))
 )
 
-summary(res)
+idx <- inla.stack.index(stk.p, "pred")$data
+fitted <- res$summary.fitted.values[idx, c("0.5quant")]
 
-# Results summary
-# res$summary.fixed
-# res$summary.random
-# res$summary.hyperpar
-# res$marginals.fixed
+plot(x = c(0,0.3), y = c(0.,0.3), type="l", xlab="raw estimate (y/n_obs)", ylab="INLA estimate, Matern1")
+points(estimate, fitted, pch = 16, col = "red")
+abline(a = 0, b = 1)
+legend(0.01, 0.24, legend = c("INLA estimates, Matern1"), 
+       col = c("red"), pch = c(16, 16), 
+       cex = 0.8, title = "", text.font = 4, bg = "lightblue")
 
-fitted <- res$summary.fitted.values
-dim(fitted)
-fitted_0.5quant <- fitted$`0.5quant`
-
-#plot(x = c(0,0.3), y = c(0.,0.3), type="l", xlab="raw estimate (y/n_obs)", ylab="INLA estimate, iid")
-plot()
-plot (estimate, fitted_0.5quant, pch=16, col="red")
-legend(0.01, 0.27, 
-       legend=c("INLA estimates, Besag"),
-       col=c( "red"), 
-       pch= c(16, 16),
-       cex=0.8,
-       title="", text.font=4, bg='lightblue')
-
-
-
-
-
+hyper <- res$summary.hyperpar
+dim(hyper)
