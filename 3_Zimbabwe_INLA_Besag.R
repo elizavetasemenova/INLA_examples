@@ -5,6 +5,8 @@ library(INLA)
 library(stringr)
 library(spdep)
 
+# Besag example: https://www.paulamoraga.com/book-geospatial/sec-arealdataexamplespatial.html?q=besag#inference-using-inla
+
 #---------------------------------------------------------------------
 # load data
 #---------------------------------------------------------------------
@@ -72,8 +74,8 @@ fitted_0.5quant <- fitted$`0.5quant`
 plot(x = c(0,0.3), y = c(0.,0.3), type="l", xlab="raw estimate (y/n_obs)", ylab="INLA estimate, iid")
 points(estimate, fitted_0.5quant, pch=16, col="red")
 legend(0.01, 0.27, 
-       legend=c("Raw estimates", "INLA estimates, Besag"),
-       col=c("blue", "red"), 
+       legend=c("INLA estimates, Besag"),
+       col=c( "red"), 
        pch= c(16, 16),
        cex=0.8,
        title="", text.font=4, bg='lightblue')
