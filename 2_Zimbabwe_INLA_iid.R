@@ -11,30 +11,30 @@ spdf <- geojson_read("Zimbabwe_HIV/zwe2016phia.geojson",  what = "sp")
 names(spdf)
 class(spdf)
 
-# plot borders
-plot(spdf)
-
-# plot centroids
-points(spdf$center_x, spdf$center_y, col="red", pch=16)
-
-length(spdf$center_x)
-
-x_coords = spdf$center_x
-y_coords = spdf$center_y
-
-x_coords = (x_coords - min(x_coords))/(max(x_coords) - min(x_coords))
-y_coords = (y_coords - min(y_coords))/(max(y_coords) - min(y_coords))
-
-plot(x_coords, y_coords, col="red", pch=16, main="Centroids")
+# # plot borders
+# plot(spdf)
+# 
+# # plot centroids
+# points(spdf$center_x, spdf$center_y, col="red", pch=16)
+# 
+# length(spdf$center_x)
+# 
+# x_coords = spdf$center_x
+# y_coords = spdf$center_y
+# 
+# x_coords = (x_coords - min(x_coords))/(max(x_coords) - min(x_coords))
+# y_coords = (y_coords - min(y_coords))/(max(y_coords) - min(y_coords))
+# 
+# plot(x_coords, y_coords, col="red", pch=16, main="Centroids")
 
 y = round(spdf$y)
 n_obs = round(spdf$n_obs)
 estimate = spdf$estimate
 
-plot(x = c(0,0.3), y = c(0.,0.3), type="l")
-points(estimate, y/n_obs, pch=16, col="blue")
+# plot(x = c(0,0.3), y = c(0.,0.3), type="l")
+# points(estimate, y/n_obs, pch=16, col="blue")
 
-df_model <- data.frame(area_id=spdf$area_id, x_coords, y_coords, y, n_obs, estimate)
+df_model <- data.frame(area_id=spdf$area_id, y, n_obs, estimate)
 head(df_model)
 
 #---------------------------------------------------------------------
@@ -43,7 +43,7 @@ head(df_model)
 
 prior.prec <- list(prec = list(prior = "pc.prec",
                                param = c(1, 0.01)))
-formula <- y ~ 1 + f(area_id, model = "iid", hyper = prior.prec)
+formula <- y ~  f(area_id, model = "iid", hyper = prior.prec)
 
 res <- inla(formula,
             data = df_model,
