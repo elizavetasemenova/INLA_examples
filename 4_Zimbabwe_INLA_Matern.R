@@ -115,3 +115,12 @@ legend(0.01, 0.24, legend = c("INLA estimates, Matern1"),
 
 hyper <- res$summary.hyperpar
 dim(hyper)
+
+par(mfrow = c(2, 1), mar = c(3, 3, 1, 1), mgp = c(2, 1, 0))
+plot(res$marginals.hyperpar[[2]], type = "l",
+     xlab = expression(sigma), ylab = 'Posterior density')
+plot(res$marginals.hyperpar[[1]], type = "l",
+     xlab = 'Practical range', ylab = 'Posterior density')
+
+rr <- exp(rnorm(1000, -1.782565, 0.2789648))
+hist(rr)
